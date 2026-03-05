@@ -1,0 +1,20 @@
+{% for dyn, authors in dynasties.items() %}
+<details style="margin-bottom: 0.75rem;" {% if selected_dynasty == dyn %}open{% endif %}>
+    <summary style="font-weight:500; cursor:pointer;">
+        <a hx-get="/poems?dynasty={{ dyn | urlencode }}" hx-target=".main-content" hx-swap="innerHTML" style="text-decoration:none; color:inherit;">
+            {{ dyn }}{% if selected_dynasty == dyn and selected_author %} / {{ selected_author }}{% endif %}
+        </a>
+    </summary>
+    <ul style="list-style: none; margin:0.5rem 0 0 1rem; padding:0; max-height: 150px; overflow-y: auto;">
+    {% for a in authors %}
+        <li>
+            <a hx-get="/poems?dynasty={{ dyn | urlencode }}&author={{ a | urlencode }}" 
+               hx-target=".main-content" hx-swap="innerHTML" 
+               style="font-size:0.9rem; color:#444; display:block; padding:0.25rem 0; {% if selected_dynasty==dyn and selected_author==a %}font-weight:600; color:#222;{% endif %}">
+               {{ a }}
+            </a>
+        </li>
+    {% endfor %}
+    </ul>
+</details>
+{% endfor %}

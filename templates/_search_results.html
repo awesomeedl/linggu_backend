@@ -1,0 +1,18 @@
+{% if results %}
+<div style="display: grid; gap: 1rem; margin-top: 1rem;">
+{% for p in results %}
+    <div style="background: white; border-radius: 8px; padding: 1rem 1.5rem; box-shadow: 0 2px 6px rgba(0,0,0,0.1); cursor: pointer;" 
+         hx-get="/poem/{{ p.id }}?dynasty=search&q={{ q | urlencode }}" hx-target=".main-content" hx-swap="innerHTML">
+        <h3 style="margin:0 0 0.5rem 0; color:#333;">{{ p.title }}</h3>
+        <p style="margin:0 0 0.5rem 0; color:#666; font-size:0.9rem;"><em>{{ p.author }} &mdash; {{ p.dynasty }}</em></p>
+        {% if p.text_preview %}
+        <div style="color:#555; line-height:1.6; white-space: pre-wrap; word-wrap: break-word;">
+            {{ p.text_preview }}
+        </div>
+        {% endif %}
+    </div>
+{% endfor %}
+</div>
+{% else %}
+<p>No matches found.</p>
+{% endif %}

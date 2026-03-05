@@ -1,0 +1,19 @@
+{% if poem %}
+{% set is_daily = not request.args.get('dynasty') %}
+<div style="margin-bottom: 1rem;">
+    {% if request.args.get('dynasty') %}
+        {% if request.args.get('dynasty') == 'search' %}
+            <button hx-get="/search?q={{ request.args.get('q') | urlencode }}" hx-target=".main-content" hx-swap="innerHTML" style="padding: 0.5rem 1rem; cursor: pointer;">&larr; Back</button>
+        {% else %}
+            <button hx-get="/poems?dynasty={{ request.args.get('dynasty') | urlencode }}" hx-target=".main-content" hx-swap="innerHTML" style="padding: 0.5rem 1rem; cursor: pointer;">&larr; Back</button>
+        {% endif %}
+    {% endif %}
+</div>
+<div class="poem" style="font-family: 'Noto Sans', 'Noto Sans SC', sans-serif; {% if is_daily %}text-align: center; max-width: 800px; margin: 2rem auto;{% endif %}">
+    <h2 style="font-family: 'Noto Sans SC', sans-serif; {% if is_daily %}font-size: 2.5rem; margin-bottom: 1.5rem;{% endif %}">{{ poem.title }}</h2>
+    <p style="font-family: 'Noto Sans', 'Noto Sans SC', sans-serif; {% if is_daily %}font-size: 1.2rem; margin-bottom: 2rem;{% endif %}"><em>{{ poem.author }} &mdash; {{ poem.dynasty }}</em></p>
+    <pre style="font-family: 'Noto Sans', 'Noto Sans SC', sans-serif; {% if is_daily %}font-size: 1.3rem; line-height: 2; letter-spacing: 0.1em;{% endif %}">{{ poem.text }}</pre>
+</div>
+{% else %}
+<p>No poem available.</p>
+{% endif %}

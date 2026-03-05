@@ -1,0 +1,5 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div id="poem-container" hx-get="/poem" hx-trigger="load" hx-swap="innerHTML"></div>
+{% endblock %}
