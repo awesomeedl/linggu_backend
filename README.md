@@ -2,9 +2,9 @@
 
 This repository stores collections of Chinese poems and tools for importing them into an SQLite database.
 
-## Flask/HTMX daily poem app
+## Flask/HTMX/Alpine.js/Pico.css daily poem app
 
-A simple web application serves a randomly selected poem every day from `poems.db` using Flask and HTMX.
+A simple web application serves a randomly selected poem every day from `poems.db` using Flask, HTMX for server interactions, Alpine.js for client-side state management, Pico.css for minimal styling, and custom CSS in `static/styles.css`.
 
 ### Setup
 

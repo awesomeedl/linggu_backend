@@ -1,7 +1,8 @@
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, request
 import sqlite3
 import datetime
 import random
+import urllib.parse # Make sure this is imported at the top
 
 app = Flask(__name__)
 DB_PATH = "poems.db"
@@ -21,41 +22,22 @@ def get_daily_poem():
     today = datetime.date.today().isoformat()
     rng = random.Random(today)
     index = rng.randrange(total)
-    c.execute(
-        "SELECT id, title, author, dynasty, text FROM poems LIMIT 1 OFFSET ?",
-        (index,)
-    )
-    row = c.fetchone()
-    conn.close()
-    if row:
-        return {
-            "id": row[0],
-            "title": row[1],
-            "author": row[2],
-            "dynasty": row[3],
-            "text": row[4],
-        }
-    return None
+
+    return index
 
 
+# Front page
 @app.route("/")
 def index():
     # initial page loads htmx container that will request the daily poem
     return render_template("index.html")
 
-
+# Daily poem recommendation
 @app.route("/daily")
 def daily_view():
-    # Returns just the daily poem view fragment (without full layout)
-    return render_template("_daily_view.html")
+    return poem_by_id(get_daily_poem())
 
-
-@app.route("/poem")
-def poem_fragment():
-    poem = get_daily_poem()
-    return render_template("_poem.html", poem=poem)
-
-
+# Get poem by ID
 @app.route("/poem/<int:poem_id>")
 def poem_by_id(poem_id):
     conn = sqlite3.connect(DB_PATH)
@@ -79,125 +61,134 @@ def poem_by_id(poem_id):
     return render_template("_poem.html", poem=poem)
 
 
-@app.route("/api/poem")
-def poem_json():
-    poem = get_daily_poem()
-    return jsonify(poem)
-
-
-@app.route("/search")
+@app.route("/search") # Removed methods=["POST"], defaults to GET
 def search():
-    import flask
-    q = flask.request.args.get("q", "").strip()
-    results = []
+    q = request.args.get("search", "").strip()
+    page = request.args.get("page", 1, type=int)
+    if page < 1: page = 1
+    
+    per_page = 10
+    offset = (page - 1) * per_page
+
+    rows = []
+    total_pages = 0
+
     if q:
-        conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
-        c.execute(
-            "SELECT poems.id, poems.title, poems.author, poems.dynasty, poems.text FROM poems \
-             JOIN poem_fts ON poems.rowid = poem_fts.rowid \
-             WHERE poem_fts MATCH ? LIMIT 50",
-            (q,)
-        )
-        for r in c.fetchall():
-            text = r[4] or ""
-            words = text.split()
-            preview = (" ".join(words[:50]) + "...") if len(words) > 50 else text
-            results.append({
-                "id": r[0],
-                "title": r[1],
-                "author": r[2],
-                "dynasty": r[3],
-                "text_preview": preview,
-            })
-        conn.close()
-    return render_template("_search_results.html", results=results, q=q)
+        with sqlite3.connect(DB_PATH) as conn:
+            c = conn.cursor()
+            # Added pagination Window Function and LIMIT just like poems_list()
+            c.execute(
+                """SELECT poems.id, poems.title, poems.author, poems.dynasty, poems.text,
+                          SUBSTR(poems.text, 1, 200) as preview,
+                          COUNT(*) OVER() as total
+                   FROM poems 
+                   JOIN poem_fts ON poems.rowid = poem_fts.rowid 
+                   WHERE poem_fts MATCH ? 
+                   LIMIT ? OFFSET ?""",
+                (q, per_page, offset)
+            )
+            rows = c.fetchall()
+
+        if rows:
+            total_count = rows[0][6]
+            total_pages = (total_count + per_page - 1) // per_page
+
+    # Modify this if using the helper function you added previously
+    poems = [{
+        "id": r[0], "title": r[1], "author": r[2], "dynasty": r[3],
+        "text_preview": r[5] + "...",
+        "detail_url": f"/poem/{r[0]}?dynasty=search&q={urllib.parse.quote(q)}"
+    } for r in rows]
+
+    return render_template("_poems_list.html", 
+                           poems=poems, 
+                           list_title=f'Search results for "{q}"' if q else "Search results",
+                           empty_message="No matches found.",
+                           current_page=page,
+                           total_pages=total_pages,
+                           # --- Generic Pagination Vars ---
+                           base_url=f"/search?search={urllib.parse.quote(q)}",
+                           endpoint="/search",
+                           query_params={"search": q})
 
 
 @app.route("/dynasties")
 def dynasties():
     # return dynasties with their authors for sidebar tree
-    # accept optional query params to know which dynasty/author is selected
-    selected_dynasty = request.args.get("dynasty", "").strip()
-    selected_author = request.args.get("author", "").strip()
-
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("SELECT dynasty, author FROM poems WHERE dynasty IS NOT NULL AND author IS NOT NULL GROUP BY dynasty, author ORDER BY dynasty, author")
+    c.execute("SELECT dynasty, author, poem_count FROM view_dynasty_author_counts")
     rows = c.fetchall()
     conn.close()
-    dyn_map = {}
-    for dyn, auth in rows:
-        if not dyn:
-            continue
-        dyn_map.setdefault(dyn, []).append(auth or "")
-    # authors list may contain duplicates but group by ensures unique pairs
-    return render_template("_dynasties.html", dynasties=dyn_map,
-                           selected_dynasty=selected_dynasty,
-                           selected_author=selected_author)
 
+    dyn_map = {}
+    for dyn, auth, count in rows:
+        # Structure the data for our Pico.css template
+        dyn_map.setdefault(dyn, []).append({
+            'name': auth, 
+            'count': count
+        })
+    
+    # authors list may contain duplicates but group by ensures unique pairs
+    return render_template("_dynasties.html", dynasties=dyn_map)
 
 @app.route("/poems")
 def poems_list():
+    # Use .get() default values to avoid extra try/except blocks
     dynasty = request.args.get("dynasty", "").strip()
     author = request.args.get("author", "").strip()
-    page = request.args.get("page", "1")
-    try:
-        page = int(page)
-        if page < 1:
-            page = 1
-    except (ValueError, TypeError):
-        page = 1
+    page = request.args.get("page", 1, type=int)
+    if page < 1: page = 1
     
     per_page = 10
     offset = (page - 1) * per_page
     
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    
-    # build conditions
-    conditions = []
-    params = []
-    if dynasty:
-        conditions.append("dynasty = ?")
-        params.append(dynasty)
-    if author:
-        conditions.append("author = ?")
-        params.append(author)
-    where = ""
-    if conditions:
-        where = "WHERE " + " AND ".join(conditions)
-    
-    # count total
-    c.execute(f"SELECT COUNT(*) FROM poems {where}", params)
-    total_count = c.fetchone()[0]
-    total_pages = (total_count + per_page - 1) // per_page
-    
-    # fetch page
-    c.execute(f"SELECT id, title, author, dynasty, text FROM poems {where} ORDER BY title LIMIT ? OFFSET ?", params + [per_page, offset])
-    rows = c.fetchall()
-    conn.close()
-    
-    poems = []
-    for r in rows:
-        text = r[4]
-        word_count = len(text.split())
-        if word_count > 50:
-            words = text.split()
-            preview = " ".join(words[:50]) + "..."
-        else:
-            preview = text
-        poems.append({
-            "id": r[0],
-            "title": r[1],
-            "author": r[2],
-            "dynasty": r[3],
-            "text": text,
-            "text_preview": preview
-        })
-    
-    return render_template("_poems_list.html", poems=poems, dynasty=dynasty, author=author, current_page=page, total_pages=total_pages)
+    # Context manager handles closing the connection automatically
+    with sqlite3.connect(DB_PATH) as conn:
+        c = conn.cursor()
+        
+        conditions = []
+        params = []
+        if dynasty:
+            conditions.append("dynasty = ?")
+            params.append(dynasty)
+        if author:
+            conditions.append("author = ?")
+            params.append(author)
+        
+        where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
 
+        # Optimized query: Fetching preview via SQL and total count via Window Function
+        query = f"""
+            SELECT id, title, author, dynasty, text, 
+                   SUBSTR(text, 1, 200) as preview,
+                   COUNT(*) OVER() as total
+            FROM poems {where} 
+            ORDER BY title 
+            LIMIT ? OFFSET ?
+        """
+        c.execute(query, params + [per_page, offset])
+        rows = c.fetchall()
+
+    total_count = rows[0][6] if rows else 0
+    total_pages = (total_count + per_page - 1) // per_page
+
+    # Cleaner list comprehension
+    poems = [{
+        "id": r[0], "title": r[1], "author": r[2], "dynasty": r[3],
+        "text": r[4], "text_preview": r[5] + "..."
+    } for r in rows]
+
+    return render_template("_poems_list.html", 
+                           poems=poems, 
+                           list_title=f"{dynasty}/{author}",
+                           empty_message="No poems found.",
+                           current_page=page, 
+                           total_pages=total_pages,
+                           # --- Generic Pagination Vars ---
+                           base_url=f"/poems?dynasty={urllib.parse.quote(dynasty)}&author={urllib.parse.quote(author)}",
+                           endpoint="/poems",
+                           query_params={"dynasty": dynasty, "author": author})
 
 if __name__ == "__main__":
     app.run(debug=True)

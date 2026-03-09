@@ -1,0 +1,194 @@
+        :root {
+            --pico-background-color: transparent;
+            --pico-color: #333;
+            --pico-primary: #8b6f47;
+            --pico-secondary: #f0e4d7;
+        }
+        body { 
+            font-family: "Noto Sans", "Noto Sans SC", sans-serif; 
+            background: linear-gradient(135deg, #f0e4d7 0%, #ffe4c4 100%);
+            color: #333;
+            display: block !important;
+        }
+        header {
+            padding: 1rem 2rem;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+        header h1 {
+            color: #8b6f47;
+            font-family: "Noto Sans SC", sans-serif;
+        }
+        .container {
+            min-height: calc(100vh - 80px);
+            margin: 0 !important;
+            width: 100% !important;
+            max-width: none !important;
+            padding: 0 !important;
+        }
+        .sidebar {
+            width: 250px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 2rem 1rem;
+            border-right: 1px solid #ddd;
+            overflow-y: auto;
+            position: fixed;
+            top: 80px;
+            left: 0;
+            height: calc(100vh - 80px);
+        }
+        .sidebar h3 {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            color: #666;
+            margin-bottom: 1rem;
+            margin-top: 1.5rem;
+        }
+        .sidebar a {
+            display: block;
+            padding: 0.5rem 0.75rem;
+            color: #333;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-bottom: 0.25rem;
+            cursor: pointer;
+        }
+        .sidebar a:hover {
+            background: #f0e4d7;
+        }
+        .main-content {
+            padding: 2rem;
+            overflow-y: auto;
+            transition: opacity 0.3s ease;
+            margin-left: 250px;
+            margin-top: 80px;
+            height: calc(100vh - 80px);
+        }
+        .main-content.htmx-request {
+            opacity: 0.7;
+        }
+        pre { white-space: pre-wrap; }
+        .poem { margin-top: 1rem; }
+        .header-row {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+        }
+        .search-bar {
+            flex: 1;
+            margin-left: 2rem;
+            /* margin-bottom: 1.5rem; */
+        }
+        .search-input {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        /* details styling */
+        details > summary {
+            list-style: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+        /* scrollbars for sidebar lists */
+        .sidebar ul {
+            scrollbar-width: thin;
+            scrollbar-color: #ccc transparent;
+        }
+        .sidebar ul::-webkit-scrollbar {
+            width: 6px;
+        }
+        .sidebar ul::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+        details {
+            transition: all 0.3s ease;
+        }
+        /* dynasty/author sidebar entries */
+        .dynasty-entry { margin-bottom: 0.75rem; }
+        .dynasty-summary { font-weight: 500; cursor: pointer; }
+        .dynasty-link { text-decoration: none; color: inherit; }
+        .author-list { list-style: none; margin:0.5rem 0 0 1rem; padding:0; max-height: 150px; overflow-y: auto; }
+        .author-link { font-size:0.9rem; color:#444; display:block; padding:0.25rem 0; }
+        .author-link.selected { font-weight:600; color:#222; }
+
+        /* card grid layout used by poem lists and search results */
+        .cards-grid {
+            display: grid;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        /* poem card styling overrides */
+        .poem-card {
+            background: white !important;
+            color: #333 !important;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+        }
+        .poem-card h3 {
+            margin: 0 0 0.5rem 0;
+            color: #333;
+        }
+        .poem-card .meta {
+            margin: 0 0 1rem 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .poem-card .preview {
+            color: #555;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        /* poem view variations */
+        .nav-back { margin-bottom: 1rem; }
+        .back-button { padding: 0.5rem 1rem; cursor: pointer; }
+        .poem.card { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .poem.daily { text-align: center; max-width: 800px; margin: 2rem auto; }
+        .daily-title { font-family: 'Noto Sans SC', sans-serif; font-size: 2.5rem; margin-bottom: 1.5rem; }
+        .daily-meta { font-family: 'Noto Sans', 'Noto Sans SC', sans-serif; font-size: 1.2rem; margin-bottom: 2rem; }
+        .daily-text { font-family: 'Noto Sans', 'Noto Sans SC', sans-serif; font-size: 1.3rem; line-height: 2; letter-spacing: 0.1em; }
+        /* pagination styles */
+        .pagination {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .page-button {
+            padding: 0.5rem 1rem;
+        }
+        .page-button.current {
+            background: #d4a574;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: default;
+        }
+        .ellipsis {
+            padding: 0.5rem;
+        }
+        .goto {
+            margin-left: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        .goto-label { color: #666; }
+        .goto-form { display: flex; gap: 0.35rem; }
+        .goto-input { width: 50px; padding: 0.35rem; }
+        .goto-button { padding: 0.35rem 0.75rem; }
+        .search-results { margin-top: 1rem; }

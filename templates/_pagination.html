@@ -1,0 +1,39 @@
+{% if total_pages > 1 %}
+<div class="pagination" role="group" hx-target=".main-content" hx-swap="innerHTML">
+    <button hx-get="{{ base_url }}&page=1" {% if current_page == 1 %}disabled{% endif %}>&laquo; First</button>
+    <button hx-get="{{ base_url }}&page={{ current_page - 1 }}" {% if current_page == 1 %}disabled{% endif %}>&larr; Prev</button>
+    
+    {% set page_start = [1, current_page - 2] | max %}
+    {% set page_end = [total_pages, current_page + 2] | min %}
+    
+    {% if page_start > 1 %}<button disabled class="ellipsis">...</button>{% endif %}
+    
+    {% for page_num in range(page_start, page_end + 1) %}
+        {% if page_num == current_page %}
+            <button disabled>{{ page_num }}</button>
+        {% else %}
+            <button hx-get="{{ base_url }}&page={{ page_num }}">{{ page_num }}</button>
+        {% endif %}
+    {% endfor %}
+    
+    {% if page_end < total_pages %}<button disabled class="ellipsis">...</button>{% endif %}
+    
+    <button hx-get="{{ base_url }}&page={{ current_page + 1 }}" {% if current_page == total_pages %}disabled{% endif %}>Next &rarr;</button>
+    <button hx-get="{{ base_url }}&page={{ total_pages }}" {% if current_page == total_pages %}disabled{% endif %}>Last &raquo;</button>
+</div>
+
+<div class="goto">
+    <form hx-get="{{ endpoint }}" hx-target=".main-content" hx-swap="innerHTML">
+        <fieldset role="group">
+            {% for key, value in query_params.items() %}
+                {% if value %}
+                    <input type="hidden" name="{{ key }}" value="{{ value }}" />
+                {% endif %}
+            {% endfor %}
+            <label for="goto-page">Go to page:</label>
+            <input id="goto-page" type="number" name="page" min="1" max="{{ total_pages }}" value="{{ current_page }}" />
+            <button type="submit">Go</button>
+        </fieldset>
+    </form>
+</div>
+{% endif %}

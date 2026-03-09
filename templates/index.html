@@ -1,5 +1,56 @@
-{% extends "layout.html" %}
-
-{% block content %}
-<div id="poem-container" hx-get="/poem" hx-trigger="load" hx-swap="innerHTML"></div>
-{% endblock %}
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>領古 - Daily Poem</title>
+        <script src="https://unpkg.com/htmx.org@1.9.2"></script>
+        <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+        <!--Fonts-->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@100..900&family=Noto+Serif+TC:wght@200..900&display=swap" rel="stylesheet">
+        <!--Stylesheets-->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.colors.min.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+        <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    </head>
+    <body class="app-container">
+        <header>
+            <nav class="container">
+                <ul>
+                    <li><h1>領古</h1></li>
+                </ul>
+                <ul class="search-container">
+                    <li>
+                        <form role="search" hx-get="/search" hx-target=".main-content" hx-trigger="submit">
+                            <input type="search" name="search" placeholder="查詢詩詞..." />
+                            <input type="submit" value="查詢" />
+                        </form>
+                        <!-- <input type="search" name="search" hx-post="/search" hx-target=".main-content" hx-trigger="search" placeholder="Search poems..." /> -->
+                    </li>
+                </ul>
+                <ul>
+                    <li>
+                        <button hx-get="/daily" hx-target=".main-content" hx-swap="innerHTML">每日精選</button>
+                    </li>
+                </ul>
+            </nav>
+        </header>
+        <div class="layout-wrapper container grid">
+            <aside>
+                <nav>
+                    <ul x-data="{ selectedDynasty: '', selectedAuthor: '' }">
+                        <li><h3>朝代</h3></li>
+                        <li><a hx-get="/dynasties" id="dynasty-list" hx-trigger="load" x-show="true">Browse by Dynasty/Author</a></li>
+                    </ul>
+                </nav>
+            </aside>
+            
+            <main class="main-content overflow-auto">
+                {% block content %}
+                <div id="poem-container" hx-get="/daily" hx-trigger="load" hx-swap="innerHTML"></div>
+                {% endblock %}
+            </main>
+        </div>
+    </body>
+</html>

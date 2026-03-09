@@ -1,0 +1,69 @@
+:root:not([data-theme]) {
+    --pico-primary: var(--pico-color-sand-600);
+    --pico-primary-background: var(--pico-color-sand-500);
+    --pico-primary-border: var(--pico-color-sand-600);
+    --pico-primary-underline: var(--pico-color-sand-600);
+    --pico-primary-hover-background: var(--pico-color-sand-600);
+    --pico-primary-hover-border: var(--pico-color-sand-700);
+    --pico-primary-hover-underline: var(--pico-color-sand-700);
+    --pico-primary-focus: var(--pico-color-sand-600);
+    --pico-primary-inverse: var(--pico-color-sand-50);
+
+    --pico-font-family: 'Noto Serif TC', system-ui, -apple-system, "Segoe UI", "Roboto", "Ubuntu", "Cantarell", "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+/* body>header {
+    background-color: var(--pico-primary-background);
+} */
+body>header .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#author-list {
+    max-height: 150px;
+}
+
+.layout-wrapper {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: var(--spacing);
+    overflow: hidden;
+    /* height: 100vh; */
+}
+
+.main-content {
+    padding: 1.5rem;
+}
+
+.app-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.search-container {
+  /* 1. Take up all the "leftover" space to the right of the title */
+  flex: 1; 
+  
+  /* 2. Center the search bar within that new large space */
+  display: flex;
+  justify-content: center;
+  
+  /* 3. Remove Pico's default list padding for this specific group */
+  padding-inline: 0;
+}
+
+.search-container li {
+  /* Give the search bar a reasonable width so it doesn't stretch infinitely */
+  width: 100%;
+  max-width: 500px;
+}
+
+form label {
+  display: flex;
+  justify-content: center; /* Horizontal centering */
+  align-items: center;     /* Vertical centering */
+}

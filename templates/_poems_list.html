@@ -1,64 +1,18 @@
 {% if poems %}
-<h2>
-    {% if dynasty %}{{ dynasty }}{% else %}All Poems{% endif %}
-    {% if author %} / {{ author }}{% endif %}
-</h2>
+    {% if list_title %}
+        <h2>{{ list_title }}</h2>
+    {% endif %}
 
-<div style="display: grid; gap: 1rem; margin-bottom: 2rem;">
-{% for p in poems %}
-    <div style="background: white; border-radius: 8px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); cursor: pointer;" 
-         hx-get="/poem/{{ p.id }}?dynasty={{ dynasty | urlencode }}" hx-target=".main-content" hx-swap="innerHTML">
-        <h3 style="margin: 0 0 0.5rem 0; color: #333;">{{ p.title }}</h3>
-        <p style="margin: 0 0 1rem 0; color: #666; font-size: 0.9rem;"><em>{{ p.author }} &mdash; {{ p.dynasty }}</em></p>
-        <div style="color: #555; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word;">
-            {% if p.text_preview %}{{ p.text_preview }}{% else %}{{ p.text }}{% endif %}
+    {% from "_macros.html" import poem_card %}
+        <div class="cards-grid overflow-auto">
+            {% for p in poems %}
+                {{ poem_card(p) }}
+            {% endfor %}
         </div>
-    </div>
-{% endfor %}
-</div>
 
-{% if total_pages > 1 %}
-<div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; align-items: center; margin-top: 1rem;">
-    {% if current_page > 1 %}
-        <button hx-get="/poems?dynasty={{ dynasty | urlencode }}&page=1" hx-target=".main-content" hx-swap="innerHTML" style="padding: 0.5rem 1rem;">&laquo; First</button>
-        <button hx-get="/poems?dynasty={{ dynasty | urlencode }}&page={{ current_page - 1 }}" hx-target=".main-content" hx-swap="innerHTML" style="padding: 0.5rem 1rem;">&larr; Prev</button>
-    {% endif %}
-    
-    {% set page_start = [1, current_page - 2] | max %}
-    {% set page_end = [total_pages, current_page + 2] | min %}
-    
-    {% if page_start > 1 %}
-        <span style="padding: 0.5rem 0.5rem;">...</span>
-    {% endif %}
-    
-    {% for page_num in range(page_start, page_end + 1) %}
-        {% if page_num == current_page %}
-            <button style="padding: 0.5rem 1rem; background: #d4a574; color: white; border: none; border-radius: 4px; cursor: default;">{{ page_num }}</button>
-        {% else %}
-            <button hx-get="/poems?dynasty={{ dynasty | urlencode }}&page={{ page_num }}" hx-target=".main-content" hx-swap="innerHTML" style="padding: 0.5rem 1rem;">{{ page_num }}</button>
-        {% endif %}
-    {% endfor %}
-    
-    {% if page_end < total_pages %}
-        <span style="padding: 0.5rem 0.5rem;">...</span>
-    {% endif %}
-    
-    {% if current_page < total_pages %}
-        <button hx-get="/poems?dynasty={{ dynasty | urlencode }}&page={{ current_page + 1 }}" hx-target=".main-content" hx-swap="innerHTML" style="padding: 0.5rem 1rem;">Next &rarr;</button>
-        <button hx-get="/poems?dynasty={{ dynasty | urlencode }}&page={{ total_pages }}" hx-target=".main-content" hx-swap="innerHTML" style="padding: 0.5rem 1rem;">Last &raquo;</button>
-    {% endif %}
-    
-    <span style="margin-left: 1rem; display: flex; gap: 0.5rem; align-items: center;">
-        <span style="color: #666;">Go to:</span>
-        <form hx-get="/poems" hx-target=".main-content" hx-swap="innerHTML" style="display: flex; gap: 0.35rem;">
-            <input type="hidden" name="dynasty" value="{{ dynasty }}" />
-            <input type="number" name="page" min="1" max="{{ total_pages }}" value="{{ current_page }}" style="width: 50px; padding: 0.35rem;" />
-            <button type="submit" style="padding: 0.35rem 0.75rem;">Go</button>
-        </form>
-    </span>
-</div>
-{% endif %}
+    <!-- _pagination.html has its own total_pages >= 1 check, so you can safely just include it -->
+    {% include "_pagination.html" %}
 
 {% else %}
-<p>No poems found.</p>
+    <p>{{ empty_message|default('No poems found.') }}</p>
 {% endif %}
