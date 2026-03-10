@@ -1,39 +1,71 @@
+{% macro pagination(current_page, total_pages) %}
 {% if total_pages > 1 %}
-<div class="pagination" role="group" hx-target=".main-content" hx-swap="innerHTML">
-    <button hx-get="{{ base_url }}&page=1" {% if current_page == 1 %}disabled{% endif %}>&laquo; First</button>
-    <button hx-get="{{ base_url }}&page={{ current_page - 1 }}" {% if current_page == 1 %}disabled{% endif %}>&larr; Prev</button>
-    
-    {% set page_start = [1, current_page - 2] | max %}
-    {% set page_end = [total_pages, current_page + 2] | min %}
-    
-    {% if page_start > 1 %}<button disabled class="ellipsis">...</button>{% endif %}
-    
-    {% for page_num in range(page_start, page_end + 1) %}
-        {% if page_num == current_page %}
-            <button disabled>{{ page_num }}</button>
-        {% else %}
-            <button hx-get="{{ base_url }}&page={{ page_num }}">{{ page_num }}</button>
-        {% endif %}
-    {% endfor %}
-    
-    {% if page_end < total_pages %}<button disabled class="ellipsis">...</button>{% endif %}
-    
-    <button hx-get="{{ base_url }}&page={{ current_page + 1 }}" {% if current_page == total_pages %}disabled{% endif %}>Next &rarr;</button>
-    <button hx-get="{{ base_url }}&page={{ total_pages }}" {% if current_page == total_pages %}disabled{% endif %}>Last &raquo;</button>
-</div>
 
-<div class="goto">
-    <form hx-get="{{ endpoint }}" hx-target=".main-content" hx-swap="innerHTML">
-        <fieldset role="group">
-            {% for key, value in query_params.items() %}
-                {% if value %}
-                    <input type="hidden" name="{{ key }}" value="{{ value }}" />
-                {% endif %}
-            {% endfor %}
-            <label for="goto-page">Go to page:</label>
-            <input id="goto-page" type="number" name="page" min="1" max="{{ total_pages }}" value="{{ current_page }}" />
-            <button type="submit">Go</button>
-        </fieldset>
-    </form>
+{% set current_endpoint = request.path %}
+
+<div class="pagination-wrapper" 
+     x-data="{ current: {{ current_page }}, total: {{ total_pages }} }"
+     hx-target=".main-content" 
+     hx-swap="innerHTML" 
+     hx-push-url="true"
+     hx-include="#pagination-form-{{ current_endpoint|replace('/', '-') }}">
+    <div class="pagination" role="group">
+        <button hx-get="{{ current_endpoint }}" hx-vals='{"page": 1}' :disabled="current === 1">
+            &laquo; 第一頁
+        </button>
+        
+        <button hx-get="{{ current_endpoint }}" hx-vals='{"page": {{ current_page - 1 }}}' :disabled="current === 1">
+            &larr; 上一頁
+        </button>
+        
+        {% set page_start = [1, current_page - 2] | max %}
+        {% set page_end = [total_pages, current_page + 2] | min %}
+        
+        {% if page_start > 1 %}
+            <button disabled class="ellipsis">...</button>
+        {% endif %}
+        
+        {% for page_num in range(page_start, page_end + 1) %}
+            <button hx-get="{{ current_endpoint }}" 
+                    hx-vals='{"page": {{ page_num }}}' 
+                    :disabled="current === {{ page_num }}">
+                {{ page_num }}
+            </button>
+        {% endfor %}
+        
+        {% if page_end < total_pages %}
+            <button disabled class="ellipsis">...</button>
+        {% endif %}
+        
+        <button hx-get="{{ current_endpoint }}" hx-vals='{"page": {{ current_page + 1 }}}' :disabled="current === total">
+            下一頁 &rarr;
+        </button>
+        
+        <button hx-get="{{ current_endpoint }}" hx-vals='{"page": {{ total_pages }}}' :disabled="current === total">
+            最後一頁 &raquo;
+        </button>
+    </div>
+
+    <div class="goto">
+        <form id="pagination-form-{{ current_endpoint|replace('/', '-') }}" hx-get="{{ current_endpoint }}">
+            <fieldset role="group">
+                <!-- Use Flask's request.args instead of query_params -->
+                {% for key, value in request.args.items() %}
+                    {% if value and key != 'page' %}
+                        <input type="hidden" name="{{ key }}" value="{{ value }}" />
+                    {% endif %}
+                {% endfor %}
+                <label for="goto-page-{{ current_endpoint|replace('/', '-') }}">頁:</label>
+                <input id="goto-page-{{ current_endpoint|replace('/', '-') }}" 
+                        type="number" 
+                        name="page" 
+                        min="1" 
+                        :max="total" 
+                        x-model="current" />
+                <button type="submit">前往</button>
+            </fieldset>
+        </form>
+    </div>
 </div>
 {% endif %}
+{% endmacro %}

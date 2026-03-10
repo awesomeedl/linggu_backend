@@ -6,20 +6,22 @@
         <strong>{{ dynasty }}</strong>
         </summary>
         
-        <ul id="author-list" class="overflow-auto">
+        <ul class="author-list overflow-auto">
         {% for author in authors %}
-        <li>
-            <a href="#" 
+            <li class="author-item"
+                hx-target=".main-content"
                 hx-get="/poems?dynasty={{ dynasty | urlencode }}&author={{ author.name | urlencode }}"
-                hx-target=".main-content" 
-                hx-indicator="#loading-spinner"
-                class="secondary">
-            {{ author.name }} 
-            <small style="opacity: 0.6; font-size: 0.75rem;">
-                ({{ author.count }})
-            </small>
-            </a>
-        </li>
+                hx-push-url="true">
+                <a href="#" 
+                    hx-target=".main-content" 
+                    hx-indicator="#loading-spinner"
+                    class="secondary">
+                {{ author.name }} 
+                <small style="opacity: 0.6; font-size: 0.75rem;">
+                    {{ author.count }}
+                </small>
+                </a>
+            </li>
         {% endfor %}
         </ul>
     </details>

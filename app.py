@@ -40,6 +40,13 @@ def daily_view():
 # Get poem by ID
 @app.route("/poem/<int:poem_id>")
 def poem_by_id(poem_id):
+    current_url = request.full_path
+
+    if 'HX-Request' not in request.headers:
+        # If this is a normal page load (not an htmx request), redirect to the poem detail page
+        return render_template("index.html", initial_load_url=current_url)
+
+
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute(
@@ -63,6 +70,9 @@ def poem_by_id(poem_id):
 
 @app.route("/search") # Removed methods=["POST"], defaults to GET
 def search():
+    if "HX-Request" not in request.headers:
+        return render_template("index.html", initial_load_url=request.full_path)
+
     q = request.args.get("search", "").strip()
     page = request.args.get("page", 1, type=int)
     if page < 1: page = 1
@@ -134,6 +144,9 @@ def dynasties():
 
 @app.route("/poems")
 def poems_list():
+    if "HX-Request" not in request.headers:
+        return render_template("index.html", initial_load_url=request.full_path)
+
     # Use .get() default values to avoid extra try/except blocks
     dynasty = request.args.get("dynasty", "").strip()
     author = request.args.get("author", "").strip()

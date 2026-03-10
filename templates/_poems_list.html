@@ -11,7 +11,9 @@
         </div>
 
     <!-- _pagination.html has its own total_pages >= 1 check, so you can safely just include it -->
-    {% include "_pagination.html" %}
+    {% from "_pagination.html" import pagination %}
+
+    {{ pagination(current_page, total_pages) }}
 
 {% else %}
     <p>{{ empty_message|default('No poems found.') }}</p>

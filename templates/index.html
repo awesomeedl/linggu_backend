@@ -3,12 +3,12 @@
     <head>
         <meta charset="utf-8">
         <title>領古 - Daily Poem</title>
-        <script src="https://unpkg.com/htmx.org@1.9.2"></script>
+        <script src="https://unpkg.com/htmx.org@2.0.8"></script>
         <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
         <!--Fonts-->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@100..900&family=Noto+Serif+TC:wght@200..900&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@100..900&family=Noto+Sans+TC:wght@100..900&display=swap" rel="stylesheet">
         <!--Stylesheets-->
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.colors.min.css">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
@@ -22,7 +22,11 @@
                 </ul>
                 <ul class="search-container">
                     <li>
-                        <form role="search" hx-get="/search" hx-target=".main-content" hx-trigger="submit">
+                        <form role="search" 
+                            hx-get="/search" 
+                            hx-target=".main-content" 
+                            hx-trigger="submit" 
+                            hx-push-url="true">
                             <input type="search" name="search" placeholder="查詢詩詞..." />
                             <input type="submit" value="查詢" />
                         </form>
@@ -36,21 +40,30 @@
                 </ul>
             </nav>
         </header>
-        <div class="layout-wrapper container grid">
+        <div class="layout-wrapper container grid" hx-history="false">
             <aside>
                 <nav>
-                    <ul x-data="{ selectedDynasty: '', selectedAuthor: '' }">
+                    <ul>
                         <li><h3>朝代</h3></li>
-                        <li><a hx-get="/dynasties" id="dynasty-list" hx-trigger="load" x-show="true">Browse by Dynasty/Author</a></li>
+                        <li><a hx-get="/dynasties" id="dynasty-list" hx-trigger="load">Browse by Dynasty/Author</a></li>
                     </ul>
                 </nav>
             </aside>
             
-            <main class="main-content overflow-auto">
-                {% block content %}
-                <div id="poem-container" hx-get="/daily" hx-trigger="load" hx-swap="innerHTML"></div>
-                {% endblock %}
+            <main id="main-content" class="main-content overflow-auto">
+                <div id="poem-container" hx-get="{{ initial_load_url | default('/daily')}}" hx-trigger="load" hx-swap="innerHTML"></div>
             </main>
         </div>
     </body>
+    <script>
+        document.body.addEventListener('htmx:historyCacheError', function(evt) {
+            console.error("HTMX History Cache Error Detected!");
+            console.group("Error Details");
+            console.log("Error Object:", evt.detail.error);
+            console.log("Target Element:", evt.detail.target);
+            console.log("LocalStorage Usage:", JSON.stringify(localStorage).length, "bytes");
+            console.log("Event Details:", evt.detail);
+            console.groupEnd();
+        });
+    </script>
 </html>
