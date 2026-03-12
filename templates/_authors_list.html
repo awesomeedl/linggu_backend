@@ -1,0 +1,23 @@
+{% for author in authors %}
+<li class="author-item">
+    <a href="#" 
+       hx-get="/poems?dynasty={{ dynasty | urlencode }}&author={{ author.name | urlencode }}"
+       hx-target=".main-content" 
+       hx-push-url="true"
+       class="secondary">
+        {{ author.name }} 
+        <small style="opacity: 0.6; font-size: 0.75rem;">
+            {{ author.count }}
+        </small>
+    </a>
+</li>
+{% endfor %}
+
+{% if has_next %}
+<li hx-get="/dynasties/{{ dynasty | urlencode }}/authors?page={{ current_page + 1 }}"
+    hx-trigger="intersect once"
+    hx-target="this"
+    hx-swap="outerHTML">
+    <small style="opacity: 0.5;">Loading...</small>
+</li>
+{% endif %}

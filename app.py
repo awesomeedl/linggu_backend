@@ -7,15 +7,14 @@ import urllib.parse # Make sure this is imported at the top
 app = Flask(__name__)
 DB_PATH = "poems.db"
 
-
 def get_daily_poem():
     """Return a poem chosen pseudorandomly but deterministically for the current day."""
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute("SELECT COUNT(*) FROM poems")
-    total = c.fetchone()[0]
+    with sqlite3.connect(DB_PATH) as conn:
+        c = conn.cursor()
+        c.execute("SELECT COUNT(*) FROM poems")
+        total = c.fetchone()[0]
+
     if total == 0:
-        conn.close()
         return None
 
     # seed with current date so it changes every day
@@ -42,10 +41,10 @@ def daily_view():
 def poem_by_id(poem_id):
     current_url = request.full_path
 
-    if 'HX-Request' not in request.headers:
-        # If this is a normal page load (not an htmx request), redirect to the poem detail page
+    if 'HX-Request' not in request.headers or 'HX-History-Restore-Request' in request.headers:
+        # If this is a normal page load (not an htmx request) or a history restore, 
+        # redirect to the poem detail page
         return render_template("index.html", initial_load_url=current_url)
-
 
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -68,9 +67,9 @@ def poem_by_id(poem_id):
     return render_template("_poem.html", poem=poem)
 
 
-@app.route("/search") # Removed methods=["POST"], defaults to GET
+@app.route("/search")
 def search():
-    if "HX-Request" not in request.headers:
+    if "HX-Request" not in request.headers or "HX-History-Restore-Request" in request.headers:
         return render_template("index.html", initial_load_url=request.full_path)
 
     q = request.args.get("search", "").strip()
@@ -117,34 +116,57 @@ def search():
                            current_page=page,
                            total_pages=total_pages,
                            # --- Generic Pagination Vars ---
-                           base_url=f"/search?search={urllib.parse.quote(q)}",
-                           endpoint="/search",
-                           query_params={"search": q})
+                           base_url=f"/search?search={urllib.parse.quote(q)}")
 
 
 @app.route("/dynasties")
 def dynasties():
-    # return dynasties with their authors for sidebar tree
+    # Load only dynasties, skipping authors for performance
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("SELECT dynasty, author, poem_count FROM view_dynasty_author_counts")
+    c.execute("SELECT dynasty, COUNT(*) FROM view_dynasty_author_counts GROUP BY dynasty ORDER BY dynasty")
     rows = c.fetchall()
     conn.close()
 
-    dyn_map = {}
-    for dyn, auth, count in rows:
-        # Structure the data for our Pico.css template
-        dyn_map.setdefault(dyn, []).append({
-            'name': auth, 
-            'count': count
-        })
+    dyn_list = [{"name": dyn, "author_count": count} for dyn, count in rows]
     
-    # authors list may contain duplicates but group by ensures unique pairs
-    return render_template("_dynasties.html", dynasties=dyn_map)
+    return render_template("_dynasties.html", dynasties=dyn_list)
+
+@app.route("/dynasties/<string:dynasty>/authors")
+def dynasty_authors(dynasty):
+    if "HX-Request" not in request.headers or "HX-History-Restore-Request" in request.headers:
+        return render_template("index.html", initial_load_url=request.full_path)
+
+    page = request.args.get("page", 1, type=int)
+    per_page = 50
+    offset = (page - 1) * per_page
+    
+    with sqlite3.connect(DB_PATH) as conn:
+        c = conn.cursor()
+        c.execute("""
+            SELECT author, poem_count
+            FROM view_dynasty_author_counts
+            WHERE dynasty = ?
+            ORDER BY author
+            LIMIT ? OFFSET ?
+        """, (dynasty, per_page, offset))
+        rows = c.fetchall()
+        
+        c.execute("SELECT COUNT(*) FROM view_dynasty_author_counts WHERE dynasty = ?", (dynasty,))
+        total_authors = c.fetchone()[0]
+
+    authors = [{'name': r[0], 'count': r[1]} for r in rows]
+    has_next = (offset + per_page) < total_authors
+    
+    return render_template("_authors_list.html", 
+                           dynasty=dynasty, 
+                           authors=authors, 
+                           current_page=page,
+                           has_next=has_next)
 
 @app.route("/poems")
 def poems_list():
-    if "HX-Request" not in request.headers:
+    if "HX-Request" not in request.headers or "HX-History-Restore-Request" in request.headers:
         return render_template("index.html", initial_load_url=request.full_path)
 
     # Use .get() default values to avoid extra try/except blocks
@@ -191,6 +213,7 @@ def poems_list():
         "id": r[0], "title": r[1], "author": r[2], "dynasty": r[3],
         "text": r[4], "text_preview": r[5] + "..."
     } for r in rows]
+    
 
     return render_template("_poems_list.html", 
                            poems=poems, 
@@ -199,9 +222,7 @@ def poems_list():
                            current_page=page, 
                            total_pages=total_pages,
                            # --- Generic Pagination Vars ---
-                           base_url=f"/poems?dynasty={urllib.parse.quote(dynasty)}&author={urllib.parse.quote(author)}",
-                           endpoint="/poems",
-                           query_params={"dynasty": dynasty, "author": author})
+                           base_url=f"/poems?dynasty={urllib.parse.quote(dynasty)}&author={urllib.parse.quote(author)}")
 
 if __name__ == "__main__":
     app.run(debug=True)

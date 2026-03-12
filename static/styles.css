@@ -1,19 +1,34 @@
 :root:not([data-theme]) {
-    --pico-primary: var(--pico-color-sand-600);
+    /* --pico-color: var(--pico-color-800); */
+    --pico-background-color: var(--pico-color-sand-850);
+    --pico-primary: var(--pico-color-sand-400);
     --pico-primary-background: var(--pico-color-sand-500);
-    --pico-primary-border: var(--pico-color-sand-600);
-    --pico-primary-underline: var(--pico-color-sand-600);
+    --pico-primary-underline: var(--pico-color-sand-500);
+    --pico-primary-hover: var(--pico-color-sand-250);
     --pico-primary-hover-background: var(--pico-color-sand-600);
-    --pico-primary-hover-border: var(--pico-color-sand-700);
-    --pico-primary-hover-underline: var(--pico-color-sand-700);
-    --pico-primary-focus: var(--pico-color-sand-600);
+    --pico-primary-focus: var(--pico-color-sand-400);
     --pico-primary-inverse: var(--pico-color-sand-50);
+
+    --pico-card-background-color: var(--pico-color-sand-800);
+    --pico-form-element-background-color: var(--pico-color-sand-850);
+    /* --pico-form-element-color:var(--pico-color-sand-400);
+    --pico-form-element-selected-background-color:var(--pico-color-sand-400); */
+    --pico-form-element-active-background-color: var(--pico-color-sand-900);
+
+
+    /* --pico-primary-border: var(--pico-primary-background); */
+    /* --pico-primary-hover-border: var(--pico-primary-hover-background); */
+    /* --pico-primary-hover-underline: var(--pico-primary-hover); */
 
     --pico-font-family: 'Noto Sans TC', 'Noto Sans SC', system-ui, -apple-system, "Segoe UI", "Roboto", "Ubuntu", "Cantarell", "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
+body>header {
+    background-color: var(--pico-color-sand-700);
+}
+
 .author-list {
-    max-height: 150px;
+    max-height: 250px;
 }
 
 .layout-wrapper {
@@ -52,14 +67,18 @@
   max-width: 500px;
 }
 
+.pagination {
+    overflow-x: scroll;
+}
+
+.pagination>button {
+    white-space: nowrap;
+}
+
 .goto>form>fieldset>button {
     white-space: nowrap;
 }
 
-.goto>form>fieldset>label {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.5rem;
+.goto>form>fieldset>input {
+    text-align: center;
 }
-

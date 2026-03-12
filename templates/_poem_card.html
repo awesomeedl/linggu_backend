@@ -1,6 +1,6 @@
 {% macro poem_card(p) %}
 <article>
-    <div class="poem-card" 
+    <div class="poem-card"
         hx-get="/poem/{{ p.id }}" 
         hx-swap="innerHTML"
         hx-target=".main-content" 

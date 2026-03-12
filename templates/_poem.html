@@ -1,9 +1,15 @@
 {% if poem %}
-<div class="poem">
+<div class="poem" style="text-align: center;">
     <h2>{{ poem.title }}</h2>
     <h4><em>{{ poem.author }} &mdash; {{ poem.dynasty }}</em></h4>
-    <p>{{ poem.text }}</p>
+    <div style="display: inline-block; text-align: left;">
+        {% for line in poem.text.split('。') %}
+            {% if line.strip() %}
+                <p style="margin: 0.2em 0;">{{ line }}。</p>
+            {% endif %}
+        {% endfor %}
+    </div>
 </div>
 {% else %}
-<p>No poem available.</p>
+<p style="text-align: center;">No poem available.</p>
 {% endif %}

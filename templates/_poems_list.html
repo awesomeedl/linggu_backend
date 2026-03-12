@@ -3,7 +3,7 @@
         <h2>{{ list_title }}</h2>
     {% endif %}
 
-    {% from "_macros.html" import poem_card %}
+    {% from "_poem_card.html" import poem_card %}
         <div class="cards-grid overflow-auto">
             {% for p in poems %}
                 {{ poem_card(p) }}
@@ -13,7 +13,7 @@
     <!-- _pagination.html has its own total_pages >= 1 check, so you can safely just include it -->
     {% from "_pagination.html" import pagination %}
 
-    {{ pagination(current_page, total_pages) }}
+    {{ pagination(current_page, total_pages, base_url) }}
 
 {% else %}
     <p>{{ empty_message|default('No poems found.') }}</p>

@@ -1,28 +1,18 @@
 <ul>
-    {% for dynasty, authors in dynasties.items() %}
+    {% for dynasty in dynasties %}
     <li>
-    <details name="dynasty">
-        <summary class="pico-color-sand-700">
-        <strong>{{ dynasty }}</strong>
+    <details name="dynasty"
+             hx-get="/dynasties/{{ dynasty.name | urlencode }}/authors?page=1"
+             hx-target="#dynasty-authors-{{ loop.index }}"
+             hx-trigger="toggle once">
+        <summary>
+        <strong>{{ dynasty.name }}</strong>
+        <small style="opacity: 0.6; font-size: 0.75rem;">({{ dynasty.author_count }} 作者)</small>
         </summary>
         
-        <ul class="author-list overflow-auto">
-        {% for author in authors %}
-            <li class="author-item"
-                hx-target=".main-content"
-                hx-get="/poems?dynasty={{ dynasty | urlencode }}&author={{ author.name | urlencode }}"
-                hx-push-url="true">
-                <a href="#" 
-                    hx-target=".main-content" 
-                    hx-indicator="#loading-spinner"
-                    class="secondary">
-                {{ author.name }} 
-                <small style="opacity: 0.6; font-size: 0.75rem;">
-                    {{ author.count }}
-                </small>
-                </a>
-            </li>
-        {% endfor %}
+        <ul id="dynasty-authors-{{ loop.index }}" class="author-list overflow-auto">
+            <!-- Authors lazy loaded here via HTMX -->
+            <li><small>Loading authors...</small></li>
         </ul>
     </details>
     </li>
