@@ -9,23 +9,13 @@ import urllib.parse
 load_dotenv()
 
 app = Flask(__name__)
-engine = create_engine(os.environ["DATABASE_URL"])
 
-def get_daily_poem() -> None | int:
-    """Return a poem chosen pseudorandomly but deterministically for the current day."""
-    with engine.connect() as conn:
-        total = int(conn.execute(text("SELECT COUNT(*) FROM poems")).scalar() or 0)
-
-    if total == 0:
-        return None
-
-    # seed with current date so it changes every day
-    today = datetime.date.today().isoformat()
-    rng = random.Random(today)
-    index = rng.randrange(total)
-
-    return index
-
+_db_url = os.environ["DATABASE_URL"]
+_is_local = any(h in _db_url for h in ("localhost", "127.0.0.1", "::1"))
+engine = create_engine(
+    _db_url,
+    connect_args={"sslmode": "disable"} if _is_local else {},
+)
 
 @app.route("/")
 def index():
@@ -35,8 +25,22 @@ def index():
 
 @app.route("/daily")
 def daily_view():
-    """Redirect to today's deterministically chosen daily poem."""
-    return poem_by_id(get_daily_poem())
+    """Return today's deterministically chosen daily poem."""
+    with engine.connect() as conn:
+        total = int(conn.execute(text("SELECT COUNT(*) FROM poems")).scalar() or 0)
+
+        if total == 0:
+            return render_template("_poem.html", poem=None)
+
+        today = datetime.date.today().isoformat()
+        index = random.Random(today).randrange(total)
+
+        row = conn.execute(
+            text("SELECT id FROM poems ORDER BY id LIMIT 1 OFFSET :offset"),
+            {"offset": index}
+        ).fetchone()
+
+    return poem_by_id(row[0]) if row else render_template("_poem.html", poem=None)
 
 
 @app.route("/poem/<int:poem_id>")
@@ -86,12 +90,11 @@ def search():
     if q:
         with engine.connect() as conn:
             rows = conn.execute(
-                text("""SELECT poems.id, poems.title, poems.author, poems.dynasty, poems.text,
-                              SUBSTR(poems.text, 1, 200) as preview,
+                text("""SELECT id, title, author, dynasty, text,
+                              SUBSTR(text, 1, 200) as preview,
                               COUNT(*) OVER() as total
                        FROM poems
-                       JOIN poem_fts ON poems.rowid = poem_fts.rowid
-                       WHERE poem_fts MATCH :q
+                       WHERE title &@~ :q OR author &@~ :q OR text &@~ :q
                        LIMIT :limit OFFSET :offset"""),
                 {"q": q, "limit": per_page, "offset": offset}
             ).fetchall()
@@ -102,7 +105,7 @@ def search():
 
     poems = [{
         "id": r[0], "title": r[1], "author": r[2], "dynasty": r[3],
-        "text_preview": r[5] + "...",
+        "text_preview": (r[5] or "") + "...",
         "detail_url": f"/poem/{r[0]}?dynasty=search&q={urllib.parse.quote(q)}"
     } for r in rows]
 
@@ -208,7 +211,7 @@ def poems_list():
 
     poems = [{
         "id": r[0], "title": r[1], "author": r[2], "dynasty": r[3],
-        "text": r[4], "text_preview": r[5] + "..."
+        "text": r[4], "text_preview": (r[5] or "") + "..."
     } for r in rows]
     
 

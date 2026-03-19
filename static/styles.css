@@ -20,7 +20,7 @@
     /* --pico-primary-hover-border: var(--pico-primary-hover-background); */
     /* --pico-primary-hover-underline: var(--pico-primary-hover); */
 
-    --pico-font-family: 'Noto Sans TC', 'Noto Sans SC', system-ui, -apple-system, "Segoe UI", "Roboto", "Ubuntu", "Cantarell", "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    --pico-font-family: 'PingFang TC', 'PingFang SC', 'Microsoft JhengHei', 'Microsoft YaHei UI', 'Microsoft YaHei', 'Noto Sans CJK TC', 'Noto Sans CJK SC', 'Hiragino Sans GB', system-ui, -apple-system, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji";
 }
 
 body>header {
