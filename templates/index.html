@@ -38,10 +38,10 @@
         </header>
         <div class="layout-wrapper container grid" hx-history="false">
             <aside>
-                <nav>
+                <nav hx-get="/dynasties" hx-trigger="load" hx-swap="innerHTML">
                     <ul>
                         <li><h3>朝代</h3></li>
-                        <li><a hx-get="/dynasties" id="dynasty-list" hx-trigger="load">Browse by Dynasty/Author</a></li>
+                        <li><small>Loading...</small></li>
                     </ul>
                 </nav>
             </aside>
@@ -51,15 +51,4 @@
             </main>
         </div>
     </body>
-    <script>
-        document.body.addEventListener('htmx:historyCacheError', function(evt) {
-            console.error("HTMX History Cache Error Detected!");
-            console.group("Error Details");
-            console.log("Error Object:", evt.detail.error);
-            console.log("Target Element:", evt.detail.target);
-            console.log("LocalStorage Usage:", JSON.stringify(localStorage).length, "bytes");
-            console.log("Event Details:", evt.detail);
-            console.groupEnd();
-        });
-    </script>
 </html>

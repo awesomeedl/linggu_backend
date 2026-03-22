@@ -55,7 +55,12 @@ def poem_by_id(poem_id):
 
     with engine.connect() as conn:
         row = conn.execute(
-            text("SELECT id, title, author, dynasty, text FROM poems WHERE id = :id"),
+            text("""
+                SELECT p.id, p.title, a.name AS author, p.dynasty, p.text
+                FROM poems p
+                LEFT JOIN authors a ON a.id = p.author_id
+                WHERE p.id = :id
+            """),
             {"id": poem_id}
         ).fetchone()
 
@@ -90,12 +95,15 @@ def search():
     if q:
         with engine.connect() as conn:
             rows = conn.execute(
-                text("""SELECT id, title, author, dynasty, text,
-                              SUBSTR(text, 1, 200) as preview,
-                              COUNT(*) OVER() as total
-                       FROM poems
-                       WHERE title &@~ :q OR author &@~ :q OR text &@~ :q
-                       LIMIT :limit OFFSET :offset"""),
+                text("""
+                    SELECT p.id, p.title, a.name AS author, p.dynasty, p.text,
+                           SUBSTR(p.text, 1, 200) AS preview,
+                           COUNT(*) OVER() AS total
+                    FROM poems p
+                    LEFT JOIN authors a ON a.id = p.author_id
+                    WHERE p.title &@~ :q OR p.text &@~ :q
+                    LIMIT :limit OFFSET :offset
+                """),
                 {"q": q, "limit": per_page, "offset": offset}
             ).fetchall()
 
@@ -183,10 +191,10 @@ def poems_list():
     conditions = []
     params = {}
     if dynasty:
-        conditions.append("dynasty = :dynasty")
+        conditions.append("p.dynasty = :dynasty")
         params["dynasty"] = dynasty
     if author:
-        conditions.append("author = :author")
+        conditions.append("a.name = :author")
         params["author"] = author
 
     where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
@@ -196,11 +204,13 @@ def poems_list():
     with engine.connect() as conn:
         rows = conn.execute(
             text(f"""
-                SELECT id, title, author, dynasty, text,
-                       SUBSTR(text, 1, 200) as preview,
-                       COUNT(*) OVER() as total
-                FROM poems {where}
-                ORDER BY title
+                SELECT p.id, p.title, a.name AS author, p.dynasty, p.text,
+                       SUBSTR(p.text, 1, 200) AS preview,
+                       COUNT(*) OVER() AS total
+                FROM poems p
+                LEFT JOIN authors a ON a.id = p.author_id
+                {where}
+                ORDER BY p.title
                 LIMIT :limit OFFSET :offset
             """),
             params
