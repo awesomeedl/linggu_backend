@@ -1,14 +1,13 @@
 {% macro poem_card(p) %}
 <article>
     <div class="poem-card"
-        hx-get="/poem/{{ p.id }}" 
-        hx-swap="innerHTML"
-        hx-target=".main-content" 
-        hx-push-url="true">
+         hx-get="/poem/{{ p.id }}"
+         hx-swap="innerHTML"
+         hx-target=".main-content"
+         hx-push-url="true">
         <h3>{{ p.title }}</h3>
         <p class="meta"><em>{{ p.author }} &mdash; {{ p.dynasty }}</em></p>
-    <div class="preview">{{ p.text_preview or p.text }}</div>
-</div>
+        <div class="preview">{{ p.text_preview or p.text }}</div>
+    </div>
 </article>
-
 {% endmacro %}

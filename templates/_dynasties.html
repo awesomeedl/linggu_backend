@@ -6,8 +6,8 @@
              hx-target="#dynasty-authors-{{ loop.index }}"
              hx-trigger="toggle once">
         <summary>
-        <strong>{{ dynasty.name }}</strong>
-        <small style="opacity: 0.6; font-size: 0.75rem;">({{ dynasty.author_count }} 作者)</small>
+            <strong>{{ dynasty.name }}</strong>
+            <small class="muted-sm">({{ dynasty.author_count }} 作者)</small>
         </summary>
         
         <ul id="dynasty-authors-{{ loop.index }}" class="author-list overflow-auto">

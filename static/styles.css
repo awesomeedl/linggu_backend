@@ -82,3 +82,23 @@ body>header {
 .goto>form>fieldset>input {
     text-align: center;
 }
+
+/* Poem display */
+.poem {
+    text-align: center;
+}
+
+.poem-text {
+    display: inline-block;
+    text-align: center;
+}
+
+.poem-line {
+    margin: 0.2em 0;
+}
+
+/* Muted small label used across author/dynasty lists */
+.muted-sm {
+    opacity: 0.6;
+    font-size: 0.75rem;
+}

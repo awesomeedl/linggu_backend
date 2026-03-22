@@ -1,0 +1,3 @@
+[submodule "libs/linggu-db"]
+	path = libs/linggu-db
+	url = https://github.com/awesomeedl/linggu-db
